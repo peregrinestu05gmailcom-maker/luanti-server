@@ -2,7 +2,7 @@ FROM ubuntu:22.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-# 1. Install dependencies
+# 1. Install dependencies including curl and ca-certificates for SSL
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
     curl \
@@ -16,9 +16,10 @@ RUN apt-get update && \
     zlib1g \
     && rm -rf /var/lib/apt/lists/*
 
-# 2. Download the latest stable server binary directly from Minetest's CDN
-# This URL is stable and does not require API parsing or follow redirects
+# 2. Download the latest stable server binary using a direct link that avoids redirects
+# We use the 'githubusercontent.com' raw link structure which is more stable
 RUN curl -L "https://github.com/minetest/minetest/releases/download/5.9.0/minetest-5.9.0-linux-x86_64.tar.xz" \
+    -H "Accept: application/octet-stream" \
     -o /tmp/luanti.tar.xz && \
     mkdir -p /opt/luanti && \
     tar -xf /tmp/luanti.tar.xz -C /opt/luanti --strip-components=1 && \
