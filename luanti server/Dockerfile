@@ -2,19 +2,22 @@ FROM ubuntu:22.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 
+# Install prerequisites for adding PPAs
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
+    software-properties-common \
     curl \
     ca-certificates \
-    dpkg \
     && rm -rf /var/lib/apt/lists/*
 
-# Get the latest release URL dynamically
-RUN LATEST_URL=$(curl -s https://api.github.com/repos/luanti/luanti/releases/latest | grep "browser_download_url.*amd64\.deb" | cut -d '"' -f 4) && \
-    echo "Downloading from: $LATEST_URL" && \
-    curl -L "$LATEST_URL" -o /tmp/luanti.deb && \
-    apt-get install -y --no-install-recommends /tmp/luanti.deb && \
-    rm /tmp/luanti.deb
+# Add the official Minetest/Luanti PPA
+# This PPA provides the 'luanti' package for Ubuntu
+RUN add-apt-repository ppa:minetest/stable && \
+    apt-get update && \
+    apt-get install -y --no-install-recommends \
+    luanti \
+    luanti-data \
+    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /luanti-data
 
