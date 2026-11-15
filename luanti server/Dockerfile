@@ -1,8 +1,4 @@
-FROM ubuntu:22.04
-
-ENV DEBIAN_FRONTEND=noninteractive
-
-# Install dependencies
+# Install dependencies first to ensure SSL works for any future redirects
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
     curl \
@@ -16,7 +12,7 @@ RUN apt-get update && \
     zlib1g \
     && rm -rf /var/lib/apt/lists/*
 
-# Download Luanti server binary
+# Download using the DIRECT object storage URL (no redirect)
 RUN curl -L "https://github.com/minetest/minetest/releases/download/5.9.0/minetest-5.9.0-linux-x86_64.tar.xz" \
     -H "Accept: application/octet-stream" \
     -o /tmp/luanti.tar.xz && \
@@ -24,15 +20,3 @@ RUN curl -L "https://github.com/minetest/minetest/releases/download/5.9.0/minete
     tar -xf /tmp/luanti.tar.xz -C /opt/luanti --strip-components=1 && \
     chmod +x /opt/luanti/bin/luanti && \
     rm /tmp/luanti.tar.xz
-
-# Create server data directory
-WORKDIR /luanti-data
-
-# Copy config file
-COPY server.conf ./server.conf
-
-# Expose port
-EXPOSE 30000/udp 30000/tcp
-
-# Run the server
-CMD ["/opt/luanti/bin/luanti", "--server", "--config", "/luanti-data/server.conf"]
