@@ -10,11 +10,13 @@ RUN apt-get update && \
     xz-utils \
     && rm -rf /var/lib/apt/lists/*
 
-# 2. Download the correct binary directly from GitHub
-# Note: The asset name is 'minetest_5.9.0_linux_x86_64.tar.xz'
-RUN curl -L https://github.com/minetest/minetest/releases/download/5.9.0/minetest_5.9.0_linux_x86_64.tar.xz -o /tmp/luanti.tar.xz && \
+# 2. Download the CORRECT binary directly from GitHub
+# Note: The asset name is 'minetest-5.9.0-linux-x86_64.tar.xz' (hyphen, not underscore)
+RUN curl -L https://github.com/minetest/minetest/releases/download/5.9.0/minetest-5.9.0-linux-x86_64.tar.xz -o /tmp/luanti.tar.xz && \
     mkdir -p /opt/luanti && \
     tar -xf /tmp/luanti.tar.xz -C /opt/luanti --strip-components=1 && \
+    # Make sure the binary is executable
+    chmod +x /opt/luanti/bin/luanti && \
     rm /tmp/luanti.tar.xz
 
 # 3. Create server data directory
