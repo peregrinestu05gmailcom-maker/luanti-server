@@ -2,13 +2,11 @@ FROM ubuntu:22.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-# 1. Install ALL prerequisites including jq for JSON parsing
+# 1. Install dependencies including jq for JSON parsing
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-    software-properties-common \
     curl \
     ca-certificates \
-    wget \
     xz-utils \
     jq \
     libgl1-mesa-glx \
@@ -19,10 +17,15 @@ RUN apt-get update && \
     zlib1g \
     && rm -rf /var/lib/apt/lists/*
 
-# 2. Download the latest stable Luanti server binary directly from Minetest's CDN
-# This bypasses GitHub API issues entirely
-RUN curl -L "https://github.com/minetest/minetest/releases/download/5.9.0/minetest-5.9.0-linux-x86_64.tar.xz" \
-    -o /tmp/luanti.tar.xz && \
+# 2. Fetch the latest release asset URL dynamically
+# This handles GitHub's redirects and finds the correct Linux binary
+RUN echo "Fetching latest release info..." && \
+    LATEST_VERSION=$(curl -s https://api.github.com/repos/minetest/minetest/releases/latest | jq -r '.tag_name') && \
+    echo "Latest Version: $LATEST_VERSION" && \
+    ASSET_URL=$(curl -s "https://api.github.com/repos/minetest/minetest/releases/tags/$LATEST_VERSION" | \
+        jq -r '[.assets[] | select(.name == "minetest-'$LATEST_VERSION'-linux-x86_64.tar.xz")][0].browser_download_url') && \
+    echo "Downloading from: $ASSET_URL" && \
+    curl -L "$ASSET_URL" -o /tmp/luanti.tar.xz && \
     mkdir -p /opt/luanti && \
     tar -xf /tmp/luanti.tar.xz -C /opt/luanti --strip-components=1 && \
     chmod +x /opt/luanti/bin/luanti && \
