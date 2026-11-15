@@ -2,31 +2,30 @@ FROM ubuntu:22.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Update system and install basic dependencies first
+# Install basic tools and check if luanti is available in standard repos
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-    software-properties-common \
     curl \
-    ca-certificates \
-    gnupg \
+    software-properties-common \
     && rm -rf /var/lib/apt/lists/*
 
-# Add the official Minetest/Luanti repository to ensure we get the correct version
-RUN add-apt-repository ppa:minetest/minetest && \
-    apt-get update && \
-    apt-get install -y --no-install-recommends \
-    luanti \
-    luanti-data \
-    && rm -rf /var/lib/apt/lists/*
+# Try to install luanti from standard repos. 
+# If this fails, we fallback to downloading the binary directly.
+RUN if apt-cache show luanti > /dev/null 2>&1; then \
+        apt-get install -y --no-install-recommends luanti luanti-data; \
+    else \
+        echo "Luanti not in standard repos, installing manually..."; \
+        apt-get install -y --no-install-recommends wget ca-certificates; \
+        wget -q https://github.com/luanti/luanti/releases/download/v5.13.0/luanti_5.13.0-1ubuntu22.04_amd64.deb -O /tmp/luanti.deb; \
+        dpkg -i /tmp/luanti.deb || true; \
+        apt-get install -f -y; \
+        rm /tmp/luanti.deb; \
+    fi
 
-# Create a directory for server data
 WORKDIR /luanti-data
 
-# Copy configuration
 COPY server.conf ./server.conf
 
-# Expose port
 EXPOSE 30000/udp 30000/tcp
 
-# Run server
 CMD ["luanti", "--server", "--config", "/luanti-data/server.conf"]
