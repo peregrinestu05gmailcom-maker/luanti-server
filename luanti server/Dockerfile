@@ -2,20 +2,19 @@ FROM ubuntu:22.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-# 1. Install curl, xz-utils (for .tar.xz), and other basics
+# 1. Install wget, xz-utils, and other basics
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-    curl \
+    wget \
     ca-certificates \
     xz-utils \
     && rm -rf /var/lib/apt/lists/*
 
-# 2. Download the CORRECT binary directly from GitHub
-# Note: The asset name is 'minetest-5.9.0-linux-x86_64.tar.xz' (hyphen, not underscore)
-RUN curl -L https://github.com/minetest/minetest/releases/download/5.9.0/minetest-5.9.0-linux-x86_64.tar.xz -o /tmp/luanti.tar.xz && \
+# 2. Download the binary using wget -L to follow redirects properly
+# The actual file on GitHub is: minetest-5.9.0-linux-x86_64.tar.xz
+RUN wget -q --show-progress -O /tmp/luanti.tar.xz "https://github.com/minetest/minetest/releases/download/5.9.0/minetest-5.9.0-linux-x86_64.tar.xz" && \
     mkdir -p /opt/luanti && \
     tar -xf /tmp/luanti.tar.xz -C /opt/luanti --strip-components=1 && \
-    # Make sure the binary is executable
     chmod +x /opt/luanti/bin/luanti && \
     rm /tmp/luanti.tar.xz
 
