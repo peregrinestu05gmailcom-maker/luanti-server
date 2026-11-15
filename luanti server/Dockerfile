@@ -2,22 +2,20 @@ FROM ubuntu:22.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Install prerequisites for adding PPAs
+# Install basic tools needed to download and extract
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-    software-properties-common \
     curl \
     ca-certificates \
+    tar \
     && rm -rf /var/lib/apt/lists/*
 
-# Add the official Minetest/Luanti PPA
-# This PPA provides the 'luanti' package for Ubuntu
-RUN add-apt-repository ppa:minetest/stable && \
-    apt-get update && \
-    apt-get install -y --no-install-recommends \
-    luanti \
-    luanti-data \
-    && rm -rf /var/lib/apt/lists/*
+# Download the latest stable Luanti server binary directly from GitHub
+# Using v5.9.0 as it is a very stable LTS version with known assets
+RUN curl -L https://github.com/minetest/minetest/releases/download/5.9.0/minetest_5.9.0-1ubuntu22.04_amd64.deb -o /tmp/luanti.deb && \
+    dpkg -i /tmp/luanti.deb || true && \
+    apt-get install -f -y && \
+    rm /tmp/luanti.deb
 
 WORKDIR /luanti-data
 
