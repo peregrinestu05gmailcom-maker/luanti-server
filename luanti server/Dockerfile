@@ -2,17 +2,17 @@ FROM ubuntu:22.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-# 1. Install curl and xz-utils
+# 1. Install wget, xz-utils, and other basics
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-    curl \
+    wget \
     ca-certificates \
     xz-utils \
     && rm -rf /var/lib/apt/lists/*
 
-# 2. Download the CORRECT binary
+# 2. Download the binary using wget -c to handle redirects properly
 # Verified Filename: minetest-5.9.0-linux-x86_64.tar.xz
-RUN curl -L -o /tmp/luanti.tar.xz "https://github.com/minetest/minetest/releases/download/5.9.0/minetest-5.9.0-linux-x86_64.tar.xz" && \
+RUN wget -q -O /tmp/luanti.tar.xz "https://github.com/minetest/minetest/releases/download/5.9.0/minetest-5.9.0-linux-x86_64.tar.xz" && \
     mkdir -p /opt/luanti && \
     tar -xf /tmp/luanti.tar.xz -C /opt/luanti --strip-components=1 && \
     chmod +x /opt/luanti/bin/luanti && \
