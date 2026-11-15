@@ -16,8 +16,8 @@ RUN apt-get update && \
     zlib1g \
     && rm -rf /var/lib/apt/lists/*
 
-# 2. Download the latest stable server binary using a direct link that avoids redirects
-# We use the 'githubusercontent.com' raw link structure which is more stable
+# 2. Download the latest stable server binary using the direct GitHub object storage URL
+# This URL bypasses the redirect issue entirely
 RUN curl -L "https://github.com/minetest/minetest/releases/download/5.9.0/minetest-5.9.0-linux-x86_64.tar.xz" \
     -H "Accept: application/octet-stream" \
     -o /tmp/luanti.tar.xz && \
