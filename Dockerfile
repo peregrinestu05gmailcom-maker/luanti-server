@@ -1,18 +1,25 @@
+# Use an official lightweight Ubuntu base image
 FROM ubuntu:22.04
 
-# Install Luanti and dependencies
+# Set environment variables to prevent interactive prompts during installation
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install dependencies: Luanti requires specific libraries for graphics/audio/networking
 RUN apt-get update && \
-    apt-get install -y software-properties-common && \
-    add-apt-repository ppa:minetest/ppa && \
-    apt-get update && \
-    apt-get install -y luanti-server && \
-    mkdir -p /home/luanti/worlds/default
+    apt-get install -y --no-install-recommends \
+    luanti \
+    luanti-server \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
 
-# Set working directory
-WORKDIR /home/luanti
+# Create a directory for the server data
+WORKDIR /luanti-data
 
-# Expose the game port
-EXPOSE 30000
+# Copy the server configuration file into the container
+COPY server.conf ./server.conf
 
-# Run the server
-CMD ["luanti", "--server", "--world-path", "/home/luanti/worlds/default"]
+# Expose the default Luanti port (UDP/TCP 30000)
+EXPOSE 30000/udp 30000/tcp
+
+# Run the Luanti server in headless mode (no GUI)
+CMD ["luanti", "--server", "--config", "/luanti-data/server.conf"]
