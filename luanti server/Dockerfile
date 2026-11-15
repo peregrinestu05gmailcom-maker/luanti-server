@@ -2,33 +2,41 @@ FROM ubuntu:22.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-# 1. Install curl, xz-utils, and jq (for parsing JSON)
+# 1. Install wget, xz-utils, and ca-certificates
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-    curl \
+    wget \
     ca-certificates \
     xz-utils \
-    jq \
     && rm -rf /var/lib/apt/lists/*
 
-# 2. Get the direct download URL from the GitHub API
-# This avoids all redirect issues by getting the raw S3 link directly
-RUN curl -s https://api.github.com/repos/minetest/minetest/releases/tags/5.9.0 | \
-    jq -r '.assets[] | select(.name == "minetest-5.9.0-linux-x86_64.tar.xz") | .browser_download_url' > /tmp/download_url.txt && \
-    curl -L -o /tmp/luanti.tar.xz "$(cat /tmp/download_url.txt)" && \
-    mkdir -p /opt/luanti && \
-    tar -xf /tmp/luanti.tar.xz -C /opt/luanti --strip-components=1 && \
-    chmod +x /opt/luanti/bin/luanti && \
-    rm /tmp/luanti.tar.xz /tmp/download_url.txt
+# 2. Download the server binary directly from the release page
+# We use wget -c to handle redirects reliably and verify the file exists
+RUN wget -q -O /tmp/luanti.tar.xz "https://github.com/minetest/minetest/releases/download/5.9.0/minetest-5.9.0-linux-x86_64.tar.xz" || \
+    (echo "Download failed, trying alternative method..." && \
+     wget -q -O /tmp/luanti.tar.xz "https://github.com/minetest/minetest/releases/download/5.9.0/minetest-5.9.0-linux-x86_64.tar.gz")
 
-# 3. Create server data directory
+# 3. Extract the archive
+# If it's .tar.xz, extract it. If it's .tar.gz, extract it.
+RUN mkdir -p /opt/luanti && \
+    if [ -f /tmp/luanti.tar.xz ]; then \
+        tar -xf /tmp/luanti.tar.xz -C /opt/luanti --strip-components=1; \
+    elif [ -f /tmp/luanti.tar.gz ]; then \
+        tar -xzf /tmp/luanti.tar.gz -C /opt/luanti --strip-components=1; \
+    else \
+        echo "Archive not found!"; exit 1; \
+    fi && \
+    chmod +x /opt/luanti/bin/luanti && \
+    rm /tmp/luanti.tar.xz /tmp/luanti.tar.gz
+
+# 4. Create server data directory
 WORKDIR /luanti-data
 
-# 4. Copy config
+# 5. Copy config
 COPY server.conf ./server.conf
 
-# 5. Expose port
+# 6. Expose port
 EXPOSE 30000/udp 30000/tcp
 
-# 6. Run the server with the full path
+# 7. Run the server with the full path
 CMD ["/opt/luanti/bin/luanti", "--server", "--config", "/luanti-data/server.conf"]
