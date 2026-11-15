@@ -2,29 +2,29 @@ FROM ubuntu:22.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Install only what we need to download and extract
+# 1. Install curl, xz-utils (for .tar.xz), and other basics
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
     curl \
     ca-certificates \
-    tar \
+    xz-utils \
     && rm -rf /var/lib/apt/lists/*
 
-# Download the latest stable Luanti/Minetest server binary directly
-# Using v5.9.0 as a stable baseline. If this link breaks, change the version.
+# 2. Download the correct binary directly from GitHub
+# Note: The asset name is 'minetest_5.9.0_linux_x86_64.tar.xz'
 RUN curl -L https://github.com/minetest/minetest/releases/download/5.9.0/minetest_5.9.0_linux_x86_64.tar.xz -o /tmp/luanti.tar.xz && \
     mkdir -p /opt/luanti && \
     tar -xf /tmp/luanti.tar.xz -C /opt/luanti --strip-components=1 && \
     rm /tmp/luanti.tar.xz
 
-# Create a directory for your server data
+# 3. Create server data directory
 WORKDIR /luanti-data
 
-# Copy your configuration file
+# 4. Copy config
 COPY server.conf ./server.conf
 
-# Expose port
+# 5. Expose port
 EXPOSE 30000/udp 30000/tcp
 
-# Run the server using the full path to the binary
+# 6. Run the server with the full path
 CMD ["/opt/luanti/bin/luanti", "--server", "--config", "/luanti-data/server.conf"]
