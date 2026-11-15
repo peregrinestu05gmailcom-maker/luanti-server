@@ -2,31 +2,29 @@ FROM ubuntu:22.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-# 1. Install basic tools needed for downloading and fixing dependencies
+# Install only what we need to download and extract
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
     curl \
     ca-certificates \
-    dpkg \
+    tar \
     && rm -rf /var/lib/apt/lists/*
 
-# 2. Download the latest stable Luanti .deb from GitHub
-# We use v5.9.0 as it is a known stable LTS release. 
-# If this link breaks in the future, change the version number in the URL.
-RUN curl -L https://github.com/minetest/minetest/releases/download/5.9.0/minetest_5.9.0-1ubuntu22.04_amd64.deb -o /tmp/luanti.deb && \
-    # 3. Install the deb and fix any missing dependencies automatically
-    dpkg -i /tmp/luanti.deb || true && \
-    apt-get install -f -y && \
-    rm /tmp/luanti.deb
+# Download the latest stable Luanti/Minetest server binary directly
+# Using v5.9.0 as a stable baseline. If this link breaks, change the version.
+RUN curl -L https://github.com/minetest/minetest/releases/download/5.9.0/minetest_5.9.0_linux_x86_64.tar.xz -o /tmp/luanti.tar.xz && \
+    mkdir -p /opt/luanti && \
+    tar -xf /tmp/luanti.tar.xz -C /opt/luanti --strip-components=1 && \
+    rm /tmp/luanti.tar.xz
 
-# 4. Create a directory for your server data
+# Create a directory for your server data
 WORKDIR /luanti-data
 
-# 5. Copy your configuration file
+# Copy your configuration file
 COPY server.conf ./server.conf
 
-# 6. Expose the port
+# Expose port
 EXPOSE 30000/udp 30000/tcp
 
-# 7. Run the server
-CMD ["luanti", "--server", "--config", "/luanti-data/server.conf"]
+# Run the server using the full path to the binary
+CMD ["/opt/luanti/bin/luanti", "--server", "--config", "/luanti-data/server.conf"]
