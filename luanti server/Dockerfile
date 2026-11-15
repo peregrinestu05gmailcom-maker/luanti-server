@@ -2,25 +2,19 @@ FROM ubuntu:22.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Install basic tools and check if luanti is available in standard repos
+# Install basic dependencies first
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
     curl \
-    software-properties-common \
+    ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-# Try to install luanti from standard repos. 
-# If this fails, we fallback to downloading the binary directly.
-RUN if apt-cache show luanti > /dev/null 2>&1; then \
-        apt-get install -y --no-install-recommends luanti luanti-data; \
-    else \
-        echo "Luanti not in standard repos, installing manually..."; \
-        apt-get install -y --no-install-recommends wget ca-certificates; \
-        wget -q https://github.com/luanti/luanti/releases/download/v5.13.0/luanti_5.13.0-1ubuntu22.04_amd64.deb -O /tmp/luanti.deb; \
-        dpkg -i /tmp/luanti.deb || true; \
-        apt-get install -f -y; \
-        rm /tmp/luanti.deb; \
-    fi
+# Download and install the latest stable Luanti server binary
+# Using v5.13.0 as a known stable release for Ubuntu 22.04 (Jammy)
+RUN curl -L https://github.com/luanti/luanti/releases/download/v5.13.0/luanti_5.13.0-1ubuntu22.04_amd64.deb -o /tmp/luanti.deb && \
+    apt-get update && \
+    apt-get install -y --no-install-recommends /tmp/luanti.deb && \
+    rm /tmp/luanti.deb
 
 WORKDIR /luanti-data
 
