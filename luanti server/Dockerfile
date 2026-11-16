@@ -1,8 +1,10 @@
+# Use a standard Ubuntu base image
 FROM ubuntu:22.04
 
+# Set environment variables to prevent interactive prompts during build
 ENV DEBIAN_FRONTEND=noninteractive
 
-# 1. Install essential dependencies for the server and SSL support
+# 1. Install dependencies including ca-certificates for SSL support
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
     curl \
