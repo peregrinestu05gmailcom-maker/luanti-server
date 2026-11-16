@@ -10,6 +10,7 @@ RUN apt-get update && \
     curl \
     ca-certificates \
     xz-utils \
+    jq \
     libgl1-mesa-glx \
     libopenal1 \
     libvorbis0a \
@@ -18,11 +19,10 @@ RUN apt-get update && \
     zlib1g \
     && rm -rf /var/lib/apt/lists/*
 
-# 2. Download the Luanti Server Binary
-# We use the direct object storage URL to avoid GitHub redirect issues
-RUN curl -L "https://github.com/minetest/minetest/releases/download/5.9.0/minetest-5.9.0-linux-x86_64.tar.xz" \
-    -H "Accept: application/octet-stream" \
-    -o /tmp/luanti.tar.xz && \
+# 2. Download the Luanti Server Binary via API to get the correct direct link
+RUN curl -s https://api.github.com/repos/minetest/minetest/releases/tags/5.9.0 | \
+    jq -r '.assets[] | select(.name=="minetest-5.9.0-linux-x86_64.tar.xz") | .browser_download_url' | \
+    xargs curl -L -o /tmp/luanti.tar.xz && \
     mkdir -p /opt/luanti && \
     tar -xf /tmp/luanti.tar.xz -C /opt/luanti --strip-components=1 && \
     chmod +x /opt/luanti/bin/luanti && \
