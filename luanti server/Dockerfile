@@ -2,7 +2,7 @@ FROM ubuntu:22.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-# 1. Install dependencies first
+# 1. Install all necessary tools first
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
     curl \
@@ -18,7 +18,8 @@ RUN apt-get update && \
     && rm -rf /var/lib/apt/lists/*
 
 # 2. Download Luanti Server v5.9.0
-# Use -L to follow the 301 redirect from the API endpoint
+# We use -L to follow redirects from the API. 
+# We also ensure we are parsing the correct JSON structure.
 RUN curl -sL "https://api.github.com/repos/minetest/minetest/releases/tags/v5.9.0" | \
     jq -r '.assets[] | select(.name=="minetest-5.9.0-linux-x86_64.tar.xz") | .browser_download_url' | \
     xargs curl -L -o /tmp/luanti.tar.xz && \
