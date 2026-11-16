@@ -2,7 +2,7 @@ FROM ubuntu:22.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-# 1. Install dependencies including jq FIRST
+# 1. Install dependencies including jq for JSON parsing
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
     curl \
