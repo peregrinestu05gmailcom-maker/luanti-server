@@ -2,7 +2,7 @@ FROM ubuntu:22.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-# 1. Install all necessary tools including jq for JSON parsing
+# 1. Install dependencies first
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
     curl \
@@ -17,9 +17,9 @@ RUN apt-get update && \
     zlib1g \
     && rm -rf /var/lib/apt/lists/*
 
-# 2. Fetch the latest release info, find the specific asset URL, and download it
-# We use 'follow redirects' (-L) on the API call itself because GitHub redirects /tags to /releases
-RUN curl -sL "https://api.github.com/repos/minetest/minetest/releases/latest" | \
+# 2. Download Luanti Server v5.9.0
+# Use -L to follow the 301 redirect from the API endpoint
+RUN curl -sL "https://api.github.com/repos/minetest/minetest/releases/tags/v5.9.0" | \
     jq -r '.assets[] | select(.name=="minetest-5.9.0-linux-x86_64.tar.xz") | .browser_download_url' | \
     xargs curl -L -o /tmp/luanti.tar.xz && \
     mkdir -p /opt/luanti && \
@@ -30,7 +30,7 @@ RUN curl -sL "https://api.github.com/repos/minetest/minetest/releases/latest" | 
 # 3. Set working directory
 WORKDIR /luanti-data
 
-# 4. Copy config
+# 4. Copy config (ensure server.conf exists in your repo)
 COPY server.conf ./server.conf
 
 # 5. Expose port
